@@ -63,7 +63,7 @@ class Runner:
         f.close()
 
         self.conf = ConfigFactory.parse_string(conf_text)
-        self.base_exp_dir = self.conf['general.base_exp_dir'] + args.dir
+        self.base_exp_dir = args.dir
         os.makedirs(self.base_exp_dir, exist_ok=True)
         
         
@@ -263,8 +263,7 @@ class Runner:
             'udf_network_fine': self.udf_network.state_dict(),
             'iter_step': self.iter_step,
         }
-        os.makedirs(os.path.join(self.base_exp_dir, 'checkpoints'), exist_ok=True)
-        torch.save(checkpoint, os.path.join(self.base_exp_dir, 'checkpoints', 'ckpt_{:0>6d}.pth'.format(self.iter_step)))
+        torch.save(checkpoint, os.path.join(self.base_exp_dir, 'ckpt_{:0>6d}.pth'.format(self.iter_step)))
     
         
 if __name__ == '__main__':
