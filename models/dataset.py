@@ -16,15 +16,15 @@ def search_nearest_point(point_batch, point_gt):
     return dis_idx
 
 def process_data(data_dir, dataname):
-    if os.path.exists(os.path.join(data_dir, 'input', dataname) + '.ply'):
-        pointcloud = trimesh.load(os.path.join(data_dir, 'input', dataname) + '.ply').vertices
+    if os.path.exists(os.path.join(data_dir, dataname) + '.ply'):
+        pointcloud = trimesh.load(os.path.join(data_dir, dataname) + '.ply').vertices
         pointcloud = np.asarray(pointcloud)
-    elif os.path.exists(os.path.join(data_dir, 'input', dataname) + '.xyz'):
-        pointcloud = np.loadtxt(os.path.join(data_dir, 'input', dataname) + '.xyz')
-    elif os.path.exists(os.path.join(data_dir, 'input', dataname) + '.npy'):
-        pointcloud = np.load(os.path.join(data_dir, 'input', dataname) + '.npy')
-    elif os.path.exists(os.path.join(data_dir, 'input', dataname) + '.obj'):
-        pointcloud = trimesh.load(os.path.join(data_dir, 'input', dataname) + '.obj').vertices
+    elif os.path.exists(os.path.join(data_dir, dataname) + '.xyz'):
+        pointcloud = np.loadtxt(os.path.join(data_dir, dataname) + '.xyz')
+    elif os.path.exists(os.path.join(data_dir, dataname) + '.npy'):
+        pointcloud = np.load(os.path.join(data_dir, dataname) + '.npy')
+    elif os.path.exists(os.path.join(data_dir, dataname) + '.obj'):
+        pointcloud = trimesh.load(os.path.join(data_dir, dataname) + '.obj').vertices
         pointcloud = np.asarray(pointcloud)
     else:
         print('Only support .ply, .xyz or .npy data. Please adjust your data format.')
@@ -74,8 +74,7 @@ def process_data(data_dir, dataname):
     sample = np.asarray(sample)
     sample_near = np.asarray(sample_near)
 
-    os.makedirs(os.path.join(data_dir, 'query_data'), exist_ok=True)
-    np.savez(os.path.join(data_dir, 'query_data', dataname)+'.npz', sample = sample, point = pointcloud, sample_near = sample_near)
+    np.savez(os.path.join(data_dir, dataname)+'.npz', sample = sample, point = pointcloud, sample_near = sample_near)
 
 class Dataset:
     def __init__(self, conf, dataname):
@@ -87,13 +86,13 @@ class Dataset:
         self.data_dir = conf.get_string('data_dir')
         self.data_name = dataname + '.npz'
 
-        if os.path.exists(os.path.join(self.data_dir, 'query_data', self.data_name)):
+        if os.path.exists(os.path.join(self.data_dir, self.data_name)):
             print('Query data existing. Loading data...')
         else:
             print('Query data not found. Processing data...')
             process_data(self.data_dir, dataname)
 
-        load_data = np.load(os.path.join(self.data_dir, 'query_data', self.data_name))
+        load_data = np.load(os.path.join(self.data_dir, self.data_name))
         
         self.point = np.asarray(load_data['sample_near']).reshape(-1,3)
         self.sample = np.asarray(load_data['sample']).reshape(-1,3)
