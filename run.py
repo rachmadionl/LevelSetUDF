@@ -66,7 +66,7 @@ class Runner:
         self.base_exp_dir = args.dir
         os.makedirs(self.base_exp_dir, exist_ok=True)
         
-        
+        self.conf['dataset']['data_dir'] = args.dir
         self.dataset = Dataset(self.conf['dataset'], args.dataname)
         self.dataname = args.dataname
         self.iter_step = 0
@@ -107,7 +107,7 @@ class Runner:
         self.optimizer = torch.optim.Adam(self.udf_network.parameters(), lr=self.learning_rate)
 
         # Backup codes and configs for debug
-        self.file_backup()
+        # self.file_backup()
 
     def train(self):
         timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
