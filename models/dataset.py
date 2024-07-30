@@ -23,13 +23,20 @@ def process_data(data_dir, dataname):
         pointcloud = np.loadtxt(os.path.join(data_dir, 'input', dataname) + '.xyz')
     elif os.path.exists(os.path.join(data_dir, 'input', dataname) + '.npy'):
         pointcloud = np.load(os.path.join(data_dir, 'input', dataname) + '.npy')
+    elif os.path.exists(os.path.join(data_dir, 'input', dataname) + '.obj'):
+        pointcloud = trimesh.load(os.path.join(data_dir, 'input', dataname) + '.obj').vertices
+        pointcloud = np.asarray(pointcloud)
     else:
         print('Only support .ply, .xyz or .npy data. Please adjust your data format.')
         exit()
-    shape_scale = np.max([np.max(pointcloud[:,0])-np.min(pointcloud[:,0]),np.max(pointcloud[:,1])-np.min(pointcloud[:,1]),np.max(pointcloud[:,2])-np.min(pointcloud[:,2])])
-    shape_center = [(np.max(pointcloud[:,0])+np.min(pointcloud[:,0]))/2, (np.max(pointcloud[:,1])+np.min(pointcloud[:,1]))/2, (np.max(pointcloud[:,2])+np.min(pointcloud[:,2]))/2]
-    pointcloud = pointcloud - shape_center
-    pointcloud = pointcloud / shape_scale
+
+    # shape_scale = np.max([np.max(pointcloud[:,0])-np.min(pointcloud[:,0]),np.max(pointcloud[:,1])-np.min(pointcloud[:,1]),np.max(pointcloud[:,2])-np.min(pointcloud[:,2])])
+    # shape_center = [(np.max(pointcloud[:,0])+np.min(pointcloud[:,0]))/2, (np.max(pointcloud[:,1])+np.min(pointcloud[:,1]))/2, (np.max(pointcloud[:,2])+np.min(pointcloud[:,2]))/2]
+    # pointcloud = pointcloud - shape_center
+    # pointcloud = pointcloud / shape_scale
+    if pointcloud.shape[0] > 170000:
+        point_idx = np.random.choice(pointcloud.shape[0], 170000, replace = False)
+        pointcloud = pointcloud[point_idx, :]
 
     POINT_NUM = pointcloud.shape[0] // 60
     POINT_NUM_GT = pointcloud.shape[0] // 60 * 60
@@ -48,7 +55,7 @@ def process_data(data_dir, dataname):
     sample_near = []
 
     for i in range(QUERY_EACH):
-        theta = 0.25
+        theta = 0.5
         scale = theta if theta * np.sqrt(POINT_NUM_GT / 20000) < theta else theta * np.sqrt(POINT_NUM_GT / 20000)
         tt = pointcloud + scale*np.expand_dims(sigmas,-1) * np.random.normal(0.0, 1.0, size=pointcloud.shape)
         sample.append(tt)

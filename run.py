@@ -146,7 +146,7 @@ class Runner:
 
             loss_cd = self.ChamferDisL1(points.unsqueeze(0), sample_moved.unsqueeze(0))
 
-            loss = loss_cd + loss_proj + loss_surf + loss_orth 
+            loss = loss_cd + loss_proj + loss_orth + loss_surf
             
             self.optimizer.zero_grad()
             loss.backward()
@@ -162,18 +162,13 @@ class Runner:
             if self.iter_step == self.step1_maxiter:
                 _ = self.gen_extra_pointcloud(self.iter_step, 1)
 
-            if self.iter_step % self.val_freq == 0:
+            if self.iter_step == self.step1_maxiter: 
+                self.extract_mesh(resolution=args.mcube_resolution, threshold=0.0, point_gt=point_gt, iter_step=self.iter_step, logger=logger)
                 grad_surf = self.udf_network.gradient(point_gt)
                 grad_surf_norm = F.normalize(grad_surf, dim=-1)
                 out_dir_norm = os.path.join(self.base_exp_dir, 'normal')
                 os.makedirs(out_dir_norm, exist_ok=True)
                 np.save(os.path.join(out_dir_norm, 'normal_%d.npy' % self.iter_step), grad_surf_norm.detach().cpu().numpy())
-
-            if self.iter_step % self.val_freq == 0 and self.iter_step != self.step1_maxiter: 
-                self.extract_mesh(resolution=128, threshold=0.0, point_gt=point_gt, iter_step=self.iter_step, logger=logger)
-
-            if self.iter_step == self.step1_maxiter: 
-                self.extract_mesh(resolution=args.mcube_resolution, threshold=0.0, point_gt=point_gt, iter_step=self.iter_step, logger=logger)
 
 
     def extract_mesh(self, resolution=64, threshold=0.0, point_gt=None, iter_step=0, logger=None):
