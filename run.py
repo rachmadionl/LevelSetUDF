@@ -55,7 +55,8 @@ def extract_geometry(bound_min, bound_max, resolution, threshold, out_dir, iter_
 class Runner:
     def __init__(self, args, conf_path):
         self.device = torch.device('cuda')
-
+        args.dir = os.path.join(args.dir, f'{args.case:03d}', '000')
+        args.dataname = f"{args.case}_mesh"
         # Configuration
         self.conf_path = conf_path
         f = open(self.conf_path)
@@ -66,7 +67,7 @@ class Runner:
         self.base_exp_dir = args.dir
         os.makedirs(self.base_exp_dir, exist_ok=True)
         
-        
+        self.conf['dataset']['data_dir'] = args.dir
         self.dataset = Dataset(self.conf['dataset'], args.dataname)
         self.dataname = args.dataname
         self.iter_step = 0
@@ -107,7 +108,7 @@ class Runner:
         self.optimizer = torch.optim.Adam(self.udf_network.parameters(), lr=self.learning_rate)
 
         # Backup codes and configs for debug
-        self.file_backup()
+        # self.file_backup()
 
     def train(self):
         timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
@@ -156,19 +157,10 @@ class Runner:
             if self.iter_step % self.report_freq == 0:
                 print_log('iter:{:8>d} cd_l1 = {} consis = {} surf = {} query_grad = {} lr={}'.format(self.iter_step, loss_cd, loss_proj, loss_surf, loss_orth, self.optimizer.param_groups[0]['lr']), logger=logger)
             
-            if self.iter_step % self.save_freq == 0:
-                self.save_checkpoint()
-            
-            if self.iter_step == self.step1_maxiter:
-                _ = self.gen_extra_pointcloud(self.iter_step, 1)
 
             if self.iter_step == self.step1_maxiter: 
                 self.extract_mesh(resolution=args.mcube_resolution, threshold=0.0, point_gt=point_gt, iter_step=self.iter_step, logger=logger)
-                grad_surf = self.udf_network.gradient(point_gt)
-                grad_surf_norm = F.normalize(grad_surf, dim=-1)
-                out_dir_norm = os.path.join(self.base_exp_dir, 'normal')
-                os.makedirs(out_dir_norm, exist_ok=True)
-                np.save(os.path.join(out_dir_norm, 'normal_%d.npy' % self.iter_step), grad_surf_norm.detach().cpu().numpy())
+                self.save_checkpoint()
 
 
     def extract_mesh(self, resolution=64, threshold=0.0, point_gt=None, iter_step=0, logger=None):
@@ -273,7 +265,7 @@ if __name__ == '__main__':
     parser.add_argument('--mcube_resolution', type=int, default=256)
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--dir', type=str, default='test')
-    parser.add_argument('--dataname', type=str, default='demo')
+    parser.add_argument('--case', type=int, default=39)
     args = parser.parse_args()
 
     torch.cuda.set_device(args.gpu)
