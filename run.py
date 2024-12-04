@@ -56,7 +56,7 @@ class Runner:
     def __init__(self, args, conf_path):
         self.device = torch.device('cuda')
         args.dir = os.path.join(args.dir, f'{args.case:03d}', '000')
-        args.dataname = f"{args.case}_mesh"
+        args.dataname = "mesh"
         # Configuration
         self.conf_path = conf_path
         f = open(self.conf_path)
